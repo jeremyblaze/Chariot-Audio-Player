@@ -12,3 +12,4 @@ _**Run this at your own risk**_
 
 1. Replace `call-recording.mp3` file with new audio – ensure the file is named `call-recording.mp3`
 2. Run `sh transcribe.sh` in a terminal to regenerate the transcript. It will install dependencies if needed, though you may need to install ffmpeg manually first via `brew install ffmpeg`
+3. The transcript will be placed in `transcript.json`, but you'll need to copy it into `transcript.js` (which is where the player expects it to be)

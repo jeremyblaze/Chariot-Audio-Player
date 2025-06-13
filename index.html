@@ -1,0 +1,374 @@
+<html>
+<head>
+    <title>Chariot Audio Player Demo</title>
+    <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #fafbfc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        body::before {
+            display: none;
+        }
+        .concentric-circles-bg {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+            width: 700px;
+            height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.07), inset 0 0 0 1px #ececec;
+            padding: 24px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;
+            z-index: 1;
+            zoom: 0.8;
+        }
+        .audio-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .audio-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .audio-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07), inset 0 0 0 1px #ececec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-logo img {
+            width: 40px;
+            height: 40px;
+            display: block;
+        }
+        .audio-meta {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .audio-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            color: #222;
+            margin-bottom: 2px;
+        }
+        .audio-time {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 18px;
+            color: #888;
+        }
+        .audio-play-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: #ef2323;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px rgba(239,35,35,0.08);
+        }
+        .audio-play-btn:hover {
+            background: #d81b1b;
+        }
+        .audio-play-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: #fff;
+        }
+        .audio-divider {
+            border: none;
+            border-top: 1px solid #ececec;
+            margin: 24px 0 16px 0;
+        }
+        .audio-transcript {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 20px;
+            color: #222;
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            min-height: 2.5em;
+            transition: color 0.2s;
+            height: 2.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+            word-break: break-word;
+        }
+        .audio-transcript .highlight {
+            color: #ef2323;
+        }
+        .audio-transcript span + span {
+            margin-left: 0.25em;
+        }
+        .audio-restart-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 0;
+            box-shadow: none;
+            transition: color 0.2s;
+        }
+        .audio-restart-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #888;
+            transform: scaleX(-1); /* Flip horizontally */
+            transition: fill 0.2s;
+        }
+        .audio-restart-btn:hover svg {
+            fill: #222;
+        }
+    </style>
+</head>
+<body>
+    <div class="concentric-circles-bg" aria-hidden="true">
+        <svg width="450" height="450" viewBox="0 0 450 450" style="display:block;">
+            <circle cx="225" cy="225" r="60" fill="none" stroke="#E5E5E5" stroke-width="2" opacity="1" />
+            <circle cx="225" cy="225" r="105" fill="none" stroke="#E5E5E5" stroke-width="2" opacity="0.6" />
+            <circle cx="225" cy="225" r="150" fill="none" stroke="#E5E5E5" stroke-width="2" opacity="0.3" />
+            <circle cx="225" cy="225" r="195" fill="none" stroke="#E5E5E5" stroke-width="2" opacity="0.12" />
+        </svg>
+    </div>
+    <div class="audio-card">
+        <audio id="player" preload="metadata">
+            <source src="call-recording.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="audio-header">
+            <div class="audio-info">
+                <div class="audio-logo">
+                    <img src="logo.svg" alt="Logo" />
+                </div>
+                <div class="audio-meta">
+                    <div class="audio-title">Lead capture call</div>
+                    <div class="audio-time" id="audio-time">0:00</div>
+                </div>
+            </div>
+            <div class="audio-controls">
+                <button class="audio-restart-btn" id="audio-restart-btn" title="Restart">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <button class="audio-play-btn" id="audio-play-btn" title="Play">
+                    <svg id="audio-play-icon" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <hr class="audio-divider" id="audio-divider" style="display:none;" />
+        <div class="audio-transcript" id="audio-transcript" style="display:none;"></div>
+    </div>
+    <script src="transcript.js"></script>
+    <script>
+        const player = document.getElementById('player');
+        const playBtn = document.getElementById('audio-play-btn');
+        const playIcon = document.getElementById('audio-play-icon');
+        const audioTime = document.getElementById('audio-time');
+        const transcriptDiv = document.getElementById('audio-transcript');
+        const divider = document.getElementById('audio-divider');
+        const restartBtn = document.getElementById('audio-restart-btn');
+
+        // Find the current line and word index for a given time
+        function getCurrentLineAndWord(currentTime) {
+            for (let i = 0; i < transcript.length; i++) {
+                const line = transcript[i];
+                const firstWord = line.words[0];
+                const lastWord = line.words[line.words.length - 1];
+                if (currentTime >= firstWord.start && currentTime <= lastWord.end) {
+                    for (let j = 0; j < line.words.length; j++) {
+                        const w = line.words[j];
+                        if (currentTime >= w.start && currentTime <= w.end) {
+                            return { lineIndex: i, wordIndex: j };
+                        }
+                    }
+                    // If between words, show the last word
+                    if (currentTime > lastWord.end) {
+                        return { lineIndex: i, wordIndex: line.words.length - 1 };
+                    }
+                }
+            }
+            // If before transcript starts or nothing matches, show first line, no highlight
+            return { lineIndex: 0, wordIndex: -1 };
+        }
+
+        // Render the current transcript line with the current word highlighted
+        function renderTranscript(currentTime) {
+            if (!transcript.length) {
+                transcriptDiv.innerHTML = '';
+                return;
+            }
+            const { lineIndex, wordIndex } = getCurrentLineAndWord(currentTime);
+            const line = transcript[lineIndex];
+            transcriptDiv.innerHTML = line.words.map((w, i) =>
+                `<span class="${i === wordIndex ? 'highlight' : ''}">${w.text}</span>${i < line.words.length - 1 ? ' ' : ''}`
+            ).join('');
+        }
+
+        // Format time in seconds to MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Update time display
+        function updateTime() {
+            if (player.currentTime > 0) {
+                audioTime.textContent = formatTime(player.currentTime);
+            } else {
+                audioTime.textContent = formatTime(player.duration);
+            }
+        }
+
+        // Play/Pause/Restart button logic
+        playBtn.addEventListener('click', () => {
+            if (player.ended) {
+                player.currentTime = 0;
+                player.play();
+                setPauseIcon();
+            } else if (player.paused) {
+                player.play();
+                setPauseIcon();
+            } else {
+                player.pause();
+                setPlayIcon();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            if (player.currentTime > 0) {
+                player.currentTime = 0;
+                player.play();
+                setPauseIcon();
+            }
+        });
+
+        function setPlayIcon() {
+            playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+            playBtn.title = 'Play';
+        }
+        function setPauseIcon() {
+            playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/>';
+            playBtn.title = 'Pause';
+        }
+        function setRestartIcon() {
+            playIcon.innerHTML = '<path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>';
+            playBtn.title = 'Restart';
+        }
+
+        // Show/hide transcript and divider based on play state
+        function showTranscript(show) {
+            transcriptDiv.style.display = show ? '' : 'none';
+            divider.style.display = show ? '' : 'none';
+        }
+
+        function updateRestartVisibility() {
+            if (player.currentTime > 0 && (!player.paused || (player.paused && player.currentTime > 0))) {
+                restartBtn.style.display = 'flex';
+            } else {
+                restartBtn.style.display = 'none';
+            }
+        }
+
+        // Update time and transcript on timeupdate
+        player.addEventListener('timeupdate', () => {
+            updateTime();
+            updateRestartVisibility();
+            renderTranscript(player.currentTime);
+        });
+
+        // On play
+        player.addEventListener('play', () => {
+            setPauseIcon();
+            showTranscript(true);
+            updateRestartVisibility();
+            // If transcript wasn't loaded yet, try to render again
+            renderTranscript(player.currentTime);
+        });
+        // On pause
+        player.addEventListener('pause', () => {
+            if (!player.ended) setPlayIcon();
+            updateRestartVisibility();
+            // If transcript wasn't loaded yet, try to render again
+            renderTranscript(player.currentTime);
+        });
+        // On ended
+        player.addEventListener('ended', () => {
+            setPlayIcon();
+            updateRestartVisibility();
+            audioTime.textContent = formatTime(player.duration);
+            renderTranscript(0); // Show first line, no highlight
+        });
+        // On loadedmetadata
+        player.addEventListener('loadedmetadata', () => {
+            // Safari duration fix
+            if (player.duration === Infinity) {
+                player.currentTime = 24 * 60 * 60;
+                player.addEventListener('timeupdate', function getDuration() {
+                    player.currentTime = 0;
+                    player.removeEventListener('timeupdate', getDuration);
+                });
+            }
+            audioTime.textContent = formatTime(player.duration);
+            updateRestartVisibility();
+            renderTranscript(0);
+        });
+        // On durationchange
+        player.addEventListener('durationchange', () => {
+            if (player.duration !== Infinity) {
+                audioTime.textContent = formatTime(player.duration);
+                updateRestartVisibility();
+                renderTranscript(0);
+            }
+        });
+
+        // Initial transcript setup
+        showTranscript(false);
+        updateRestartVisibility();
+        renderTranscript(0);
+    </script>
+</body>
+</html>

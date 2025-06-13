@@ -3,7 +3,7 @@
 To be embedded on Webflow like so:
 
 ```html
-<iframe src="index.html" width="400px" height="400px" frameborder="0"></iframe>
+<iframe src="index.html" width="400px" height="400px" frameborder="0" scrolling="no"></iframe>
 ```
 
 ### Updating the audio

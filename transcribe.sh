@@ -22,13 +22,13 @@ if ! pip3 show whisper-timestamped &> /dev/null; then
 fi
 
 # Run transcription
-echo "Transcribing call-recording.mp3..."
+echo "Transcribing call-recording.mp4..."
 python3 - <<EOF
 import whisper_timestamped as whisper
 import json
 
 model = whisper.load_model("base")
-result = whisper.transcribe(model, "call-recording.mp3")
+result = whisper.transcribe(model, "call-recording.mp4")
 
 segments = []
 for segment in result['segments']:

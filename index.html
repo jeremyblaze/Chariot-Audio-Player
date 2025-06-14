@@ -115,14 +115,13 @@
         }
         .audio-transcript {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 20px;
+            font-size: 17px;
             color: #222;
             text-align: center;
-            line-height: 1.5;
+            line-height: 1.3;
             margin-bottom: 8px;
-            min-height: 2.5em;
             transition: color 0.2s;
-            height: 2.8em;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -172,7 +171,7 @@
     </div>
     <div class="audio-card">
         <audio id="player" preload="metadata">
-            <source src="call-recording.mp3" type="audio/mpeg">
+            <source src="call-recording.mp4" type="audio/mpeg">
             Your browser does not support the audio element.
         </audio>
         <div class="audio-header">
@@ -211,7 +210,8 @@
         const divider = document.getElementById('audio-divider');
         const restartBtn = document.getElementById('audio-restart-btn');
 
-        // Find the current line and word index for a given time
+        let lastActiveLineIndex = 0;
+
         function getCurrentLineAndWord(currentTime) {
             for (let i = 0; i < transcript.length; i++) {
                 const line = transcript[i];
@@ -221,17 +221,29 @@
                     for (let j = 0; j < line.words.length; j++) {
                         const w = line.words[j];
                         if (currentTime >= w.start && currentTime <= w.end) {
+                            lastActiveLineIndex = i;
                             return { lineIndex: i, wordIndex: j };
                         }
                     }
                     // If between words, show the last word
                     if (currentTime > lastWord.end) {
+                        lastActiveLineIndex = i;
                         return { lineIndex: i, wordIndex: line.words.length - 1 };
                     }
                 }
             }
-            // If before transcript starts or nothing matches, show first line, no highlight
-            return { lineIndex: 0, wordIndex: -1 };
+            // If before transcript starts, show first line, no highlight
+            if (transcript.length && currentTime < transcript[0].words[0].start) {
+                lastActiveLineIndex = 0;
+                return { lineIndex: 0, wordIndex: -1 };
+            }
+            // If after transcript ends, show last line, no highlight
+            if (transcript.length && currentTime > transcript[transcript.length-1].words.slice(-1)[0].end) {
+                lastActiveLineIndex = transcript.length-1;
+                return { lineIndex: transcript.length-1, wordIndex: -1 };
+            }
+            // If in a pause, keep showing the last active line, no highlight
+            return { lineIndex: lastActiveLineIndex, wordIndex: -1 };
         }
 
         // Render the current transcript line with the current word highlighted
